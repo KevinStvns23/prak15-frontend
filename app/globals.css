@@ -1,26 +1,197 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  margin: 0;
+  background: #f5f6fa;
+  color: #202433;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.container {
+  width: min(900px, calc(100% - 32px));
+  margin: 48px auto;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #6558c8;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 36px;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #697084;
+}
+
+.panel,
+.noteCard {
+  border: 1px solid #e5e7ef;
+  border-radius: 14px;
+  background: white;
+  padding: 22px;
+  box-shadow: 0 5px 18px rgb(20 25 50 / 4%);
+}
+
+.panel {
+  margin-bottom: 24px;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+form {
+  display: grid;
+  gap: 10px;
+}
+
+label {
+  margin-top: 5px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #d8dbe6;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: white;
+  color: #202433;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus {
+  outline: 2px solid #d9d4ff;
+  border-color: #7669d5;
+}
+
+.formActions,
+.cardActions {
+  display: flex;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.primaryButton {
+  background: #6558c8;
+  color: white;
+}
+
+.secondaryButton,
+.editButton {
+  background: #eeecff;
+  color: #5145ae;
+}
+
+.deleteButton {
+  background: #fff0f0;
+  color: #bf3535;
+}
+
+.message {
+  margin: 14px 0;
+  color: #5145ae;
+  font-size: 14px;
+}
+
+.notice {
+  margin-bottom: 22px;
+  border: 1px solid #e8dba8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff9e7;
+  color: #715c16;
+  font-size: 14px;
+}
+
+.sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionHeading span,
+.dateText {
+  color: #858b9d;
+  font-size: 12px;
+}
+
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.noteCard h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.noteContent {
+  min-height: 42px;
+  color: #5e6475;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.dateText {
+  margin-top: 18px;
+}
+
+.emptyState {
+  border: 1px dashed #d8dbe6;
+  border-radius: 12px;
+  padding: 26px;
+  color: #777e91;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .container {
+    margin: 28px auto;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .notesGrid {
+    grid-template-columns: 1fr;
+  }
 }

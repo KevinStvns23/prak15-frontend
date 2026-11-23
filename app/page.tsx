@@ -1,69 +1,187 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { FormEvent } from "react";
+
+type Note = {
+  id: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export default function Home() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const loadNotes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/notes", { cache: "no-store" });
+      if (!response.ok) throw new Error("Gagal mengambil catatan.");
+      const data = await response.json();
+      setNotes(data.notes);
+      setReadOnly(data.readOnly);
+    } catch {
+      setMessage("Catatan gagal dimuat. Pastikan database sudah dibuat.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadNotes();
+  }, [loadNotes]);
+
+  function resetForm() {
+    setTitle("");
+    setContent("");
+    setEditingId(null);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!title.trim()) {
+      setMessage("Judul catatan wajib diisi.");
+      return;
+    }
+
+    const editing = editingId !== null;
+    const response = await fetch(
+      editing ? `/api/notes/${editingId}` : "/api/notes",
+      {
+        method: editing ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.error ?? "Terjadi kesalahan.");
+      return;
+    }
+
+    resetForm();
+    setMessage(editing ? "Catatan berhasil diperbarui." : "Catatan berhasil ditambahkan.");
+    await loadNotes();
+  }
+
+  function startEdit(note: Note) {
+    setEditingId(note.id);
+    setTitle(note.title);
+    setContent(note.content);
+    setMessage("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function deleteNote(id: number) {
+    if (!window.confirm("Yakin ingin menghapus catatan ini?")) return;
+
+    const response = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+    const data = await response.json();
+    if (!response.ok) {
+      setMessage(data.error ?? "Catatan gagal dihapus.");
+      return;
+    }
+
+    setMessage("Catatan berhasil dihapus.");
+    await loadNotes();
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="container">
+      <header className="header">
+        <p className="eyebrow">APLIKASI SEDERHANA</p>
+        <h1>Catatan Saya</h1>
+        <p className="subtitle">Simpan ide dan catatan pentingmu di satu tempat.</p>
+      </header>
+
+      {readOnly && (
+        <div className="notice">
+          Mode demo / hanya-baca: catatan dapat dilihat, tetapi tidak dapat diubah.
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+      )}
+
+      {!readOnly && (
+        <section className="panel">
+          <h2>{editingId === null ? "Tambah Catatan" : "Edit Catatan"}</h2>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="title">Judul</label>
+            <input
+              id="title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Contoh: Ide project"
+              maxLength={100}
+              required
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            <label htmlFor="content">Isi catatan</label>
+            <textarea
+              id="content"
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder="Tulis catatan di sini..."
+              rows={4}
+            />
+
+            <div className="formActions">
+              <button className="primaryButton" type="submit">
+                {editingId === null ? "Simpan Catatan" : "Simpan Perubahan"}
+              </button>
+              {editingId !== null && (
+                <button className="secondaryButton" type="button" onClick={resetForm}>
+                  Batal
+                </button>
+              )}
+            </div>
+          </form>
+        </section>
+      )}
+
+      {message && <p className="message">{message}</p>}
+
+      <section className="notesSection">
+        <div className="sectionHeading">
+          <h2>Daftar Catatan</h2>
+          <span>{notes.length} catatan</span>
         </div>
-      </main>
-    </div>
+
+        {loading ? (
+          <p className="emptyState">Memuat catatan...</p>
+        ) : notes.length === 0 ? (
+          <p className="emptyState">Belum ada catatan. Tambahkan catatan pertamamu!</p>
+        ) : (
+          <div className="notesGrid">
+            {notes.map((note) => (
+              <article className="noteCard" key={note.id}>
+                <h3>{note.title}</h3>
+                <p className="noteContent">{note.content || "(Tidak ada isi catatan)"}</p>
+                <p className="dateText">
+                  Diperbarui: {new Date(note.updatedAt).toLocaleString("id-ID")}
+                </p>
+                {!readOnly && (
+                  <div className="cardActions">
+                    <button className="editButton" onClick={() => startEdit(note)}>
+                      Edit
+                    </button>
+                    <button className="deleteButton" onClick={() => void deleteNote(note.id)}>
+                      Hapus
+                    </button>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   );
 }

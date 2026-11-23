@@ -1,14 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
+  // Make sure the pre-filled SQLite file is included in the Vercel functions.
+  outputFileTracingIncludes: {
+    "/api/notes": ["./prisma/dev.db"],
+    "/api/notes/*": ["./prisma/dev.db"],
   },
 };
 
